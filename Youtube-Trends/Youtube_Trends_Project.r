@@ -12,7 +12,8 @@
 #' 
 ## ----setup, include=FALSE----------------------------------------------------------
 knitr::opts_chunk$set(echo = TRUE)
-knitr::purl(input, output, documentation = 2)
+
+#'knitr::purl(input, output, documentation = 2) #' code to create an R output from a R Markdown file
 
 #' 
 #' ## Analyze YouTube Trends with a Dashboard
