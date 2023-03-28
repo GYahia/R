@@ -193,7 +193,7 @@ video_stats %>%
 ```
 
 ![](Youtube_Trends_Project_files/figure-markdown_github/unnamed-chunk-11-1.png)
-
+https://raw.githubusercontent.com/GYahia/R/main/unnamed-chunk-11-1.png
 ``` r
 group_keyword_avg_likes_views <- video_stats %>%
     group_by(Keyword) %>%
