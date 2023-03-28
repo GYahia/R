@@ -1,0 +1,211 @@
+#' ---
+#' title: "Youtube Trends Project"
+#' author: "Ghassen YAHIA"
+#' date: "25/03/2023"
+#' output: 
+#'   html_document: 
+#'     toc: yes
+#'     number_sections: yes
+#'   md_document:
+#'     variant: markdown_github
+#' ---
+#' 
+## ----setup, include=FALSE----------------------------------------------------------
+knitr::opts_chunk$set(echo = TRUE)
+knitr::purl(input, output, documentation = 2)
+
+#' 
+#' ## Analyze YouTube Trends with a Dashboard
+#' YouTubers are faced with the pressure to create content that can potentially become viral and help pave their way to be the Internet’s next sensation.
+#' 
+#' What, then, gets more views nowadays? 
+#' Are certain categories more popular than others in general, or does title length matter too?
+#' 
+#' ## Setting Up the Environment
+## ----------------------------------------------------------------------------------
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+#' 
+#' ## Reading Data from the CSV File
+## ----------------------------------------------------------------------------------
+#setwd("/home/gyahia/Documents/Portfolio/RStudio/CognitiveClass/Youtube_Project/")
+video_stats <- read.csv("videos-stats.csv")
+
+#' 
+#' ## Information about the dataset
+#' ### First glance at the dataset
+## ----------------------------------------------------------------------------------
+#  video_stats
+
+#' ### Checking Dimensions
+#' It will give the number of OBSERVATIONS first (rows) and the number of VARIABLES after (columns)
+## ----------------------------------------------------------------------------------
+dim(video_stats)
+
+#' 
+#' 
+#' ### Two different ways of summarizing the dataset
+## ----------------------------------------------------------------------------------
+str(video_stats)
+summary(video_stats)
+
+#' 
+#' ### Checking for any N/A values
+## ----------------------------------------------------------------------------------
+video_stats %>%
+    summarise_all(~ sum(is.na(.)))
+
+#' There are two N/A Values for variables Likes, Comments an views.
+#' 
+#' ### Dropping these values from the dataset.
+## ----------------------------------------------------------------------------------
+video_stats <- video_stats %>%
+    drop_na()
+
+#' 
+#' ### Checking for duplicates
+## ----------------------------------------------------------------------------------
+any(duplicated(video_stats, ))
+video_stats[duplicated(video_stats), ]
+
+#' No duplicate rows found in the dataset.
+#' 
+#' If we want to look for duplicates depending on one or multiple variable we can look ccheck it this way.
+## ----------------------------------------------------------------------------------
+# any(duplicated(video_stats$Keyword))
+# video_stats[duplicated(video_stats$Keyword),]
+
+#' 
+#' ## Data Manipulation
+#' ### Creating new variables more pertinent to the job at hand
+#' 
+#' ### Checking performance of videos per 1K views in terms of Likes and Comments  
+## ----------------------------------------------------------------------------------
+video_stats <- video_stats %>%
+    mutate(
+        LikesPer1k = round(Likes / (Views / 1000), 2),
+        CommentsPer1k = round(Comments / (Views / 1000), 2)
+    )
+video_stats <- video_stats %>%
+    mutate(PubYear = as.factor(substr(Published.At, 1, 4)))
+glimpse(video_stats)
+
+#' ## Creating Plots
+#' In this case we want to see the numbeer of published videos per year.
+#' We will be using one variable that is discrete for the plotting PubYear.
+#' In this scenarion geom_bar is the best way to go.
+## ----------------------------------------------------------------------------------
+video_stats %>%
+    ggplot(aes(x = PubYear)) +
+    geom_bar(fill = "blue") +
+    theme_minimal() +
+    labs(
+        title = "Number of videos per year",
+        x = "Publication year", y = "Count of videos"
+    )
+
+#' 
+#' 
+#' 
+## ----------------------------------------------------------------------------------
+group_keyword_avg_likes_views <- video_stats %>%
+    group_by(Keyword) %>%
+    summarise(
+        avg_likes_in_K = mean(Likes, na.rm = FALSE) / 1000,
+        avg_views_in_K = mean(Views, na.rm = FALSE) / 1000, count = n()
+    )
+print(
+    arrange(group_keyword_avg_likes_views, desc(avg_likes_in_K)),
+    n = 25
+)
+
+#' Mr Beast is the one getting the most number of likes even though hehas not the biggest number of average 
+#' views.   
+#' 
+#' 
+## ----------------------------------------------------------------------------------
+group_keyword_avg_likes_views_year <- video_stats %>%
+    group_by(Keyword, PubYear) %>%
+    summarise(
+        avg_likes = mean(Likes, na.rm = FALSE),
+        avg_views = mean(Views, na.rm = FALSE), count = n()
+    )
+print(
+    arrange(group_keyword_avg_likes_views_year, desc(avg_likes)),
+    n = 25
+)
+
+#' 
+#' Depending on the year, some Keywords got more likes than MrBeast videos on average.
+## ----------------------------------------------------------------------------------
+summary(group_keyword_avg_likes_views)
+
+#' Maximum count is 50 and Max Avg Views is :103365  (in Thousands).
+## ----------------------------------------------------------------------------------
+coeff_avg_views_vs_count <- max(group_keyword_avg_likes_views$count) /
+    max(group_keyword_avg_likes_views$avg_views_in_K)
+
+#' 
+## ----fig.width=20, fig.height=10---------------------------------------------------
+legend_colors <- c("blue", "red")
+legend_labels <- c("Count", "AVG Views (in Thousands)")
+# Plot count and average views by keyword
+ggplot(group_keyword_avg_likes_views, aes(x = Keyword)) +
+    # Add first y-axis with count
+    geom_bar(aes(y = count, fill = legend_colors[1]),
+        stat = "identity",
+        width = 0.4, position = position_nudge(x = 0.15)
+    ) +
+    # Add second y-axis with average views
+    geom_bar(aes(y = avg_views_in_K / 1000, fill = legend_colors[2]),
+        stat = "identity",
+        width = 0.4, position = position_nudge(x = -0.15)
+    ) +
+    # Add a legend
+    scale_fill_manual(values = legend_colors, labels = legend_labels) +
+    # Add a title and adjust theme
+    ggtitle("\n Count and Average Views by Keyword\n") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90, size = 15),
+         text = element_text(size = 20)) +
+    scale_y_continuous(
+        name = "Count\n",
+        sec.axis = sec_axis(~ . / coeff_avg_views_vs_count,
+         name = "AVG Views (in Thounsands)\n")
+    )
+
+#' 
+#' Even though some categories have the same number of videos available, the number of likes is way too divergent for 5 of them.
+#' 
+#' Keywords having more than 10000000 AVG Views.
+## ----------------------------------------------------------------------------------
+most_viewed_channels <- group_keyword_avg_likes_views %>%
+    filter(avg_views_in_K > 10000) %>%
+    arrange(desc(avg_views_in_K))
+most_viewed_channels
+legend_labels2 <- c("AVG Likes (in Thousands)", "AVG Views (in Thousands)")
+ggplot(most_viewed_channels, aes(x = Keyword)) +
+    # Add first y-axis with count
+    geom_bar(aes(y = avg_likes_in_K, fill = legend_colors[1]),
+        stat = "identity",
+        width = 0.4, position = position_nudge(x = 0.2)
+    ) +
+    # Add second y-axis with average views
+    geom_bar(aes(y = avg_views_in_K / 1000, fill = legend_colors[2]),
+        stat = "identity",
+        width = 0.4, position = position_nudge(x = -0.2)
+    ) +
+    # Add a legend
+    scale_fill_manual(values = legend_colors, labels = legend_labels2) +
+    # Add a title and adjust theme
+    ggtitle("\n Average Views/Likes by Keyword\n") +
+    theme_bw() +
+    theme(axis.text.x = element_text(angle = 90),
+         text = element_text(size = 10)) +
+    scale_y_continuous(
+        name = "AVG Views (in Thounsands)\n",
+        sec.axis = sec_axis(~ . / 50, name = "AVG Likes (in Thounsands)\n")
+    )
+
