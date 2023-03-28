@@ -2,7 +2,12 @@
 title: "Youtube Trends Project"
 author: "Ghassen YAHIA"
 date: "25/03/2023"
-output: html_document
+output: 
+  html_document: 
+    toc: yes
+    number_sections: yes
+  md_document:
+    variant: markdown_github
 ---
 
 ```{r setup, include=FALSE}
