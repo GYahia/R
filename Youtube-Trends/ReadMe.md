@@ -192,7 +192,7 @@ video_stats %>%
     )
 ```
 
-![](https://raw.githubusercontent.com/GYahia/R/main/Youtube-Trends/unnamed-chunk-11-1.png)
+![](https://raw.githubusercontent.com/GYahia/R/main/Youtube-Trends/videos-per-year.png)
 
 ``` r
 group_keyword_avg_likes_views <- video_stats %>%
@@ -342,7 +342,7 @@ ggplot(group_keyword_avg_likes_views, aes(x = Keyword)) +
     )
 ```
 
-![](https://raw.githubusercontent.com/GYahia/R/main/Youtube-Trends/unnamed-chunk-16-1.png)
+![](https://raw.githubusercontent.com/GYahia/R/main/Youtube-Trends/avg_views_per_keyword_vs_count_videos_per_keyword.png)
 
 Even though some categories have the same number of videos available,
 the number of likes is way too divergent for 5 of them.
@@ -398,4 +398,4 @@ ggplot(most_viewed_channels, aes(x = Keyword)) +
     )
 ```
 
-![](https://raw.githubusercontent.com/GYahia/R/main/Youtube-Trends/unnamed-chunk-17-1.png)
+![](https://raw.githubusercontent.com/GYahia/R/main/Youtube-Trends/top_categories_on_avg.png)
